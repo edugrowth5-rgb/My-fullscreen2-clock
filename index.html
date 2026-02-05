@@ -2,31 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
     <title>Sagar Royal Clock</title>
     
     <meta name="theme-color" content="#000040">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
 
     <style>
         :root { --bg: #000040; --gold: #FFD700; --text: #FFD700; --dim: 1; }
         
-        /* ANTI-SHAKE & LOCK LOGIC */
-        html {
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-            position: fixed; /* Screen ko upar-neeche hilne se rokta hai */
-        }
-
-        body {
+        /* SCREEN LOCK LOGIC */
+        html, body {
             height: 100%;
             width: 100%;
             margin: 0;
-            padding: 10px;
-            overflow: hidden;
-            position: fixed;
+            padding: 0;
+            overflow: hidden; /* Scroll Block */
+            position: fixed; /* Bounce Block */
+            touch-action: none; /* Zoom/Gestures Block */
             background-color: var(--bg);
             color: var(--text);
             display: flex;
@@ -34,24 +30,28 @@
             justify-content: center;
             align-items: center;
             font-family: 'Times New Roman', serif;
-            transition: background 0.5s ease, color 0.5s ease;
-            touch-action: none; /* Kisi bhi tarah ka drag ya zoom block */
-            -webkit-user-select: none;
-            user-select: none;
+            transition: opacity 0.5s ease;
+            opacity: var(--dim);
         }
 
-        /* Sirf buttons aur inputs kaam karenge */
-        .section, .btn, input, .controls {
-            touch-action: manipulation;
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
         }
+
+        input { user-select: auto !important; }
 
         /* CLOCK STYLING */
         .clock-circle {
-            width: 260px; height: 260px; border: 8px solid var(--text);
+            width: 250px; height: 250px; border: 8px solid var(--text);
             border-radius: 50%; position: relative;
             background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
             box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
-            margin-bottom: 15px; flex-shrink: 0;
+            margin-bottom: 15px;
+            flex-shrink: 0;
         }
 
         .brand-top { position: absolute; width: 100%; text-align: center; top: 45px; font-weight: bold; font-size: 18px; letter-spacing: 2px; }
@@ -64,17 +64,17 @@
         .min { width: 4px; height: 75px; background: #fff; border: 1px solid #333; z-index: 2; }
         .sec { width: 2px; height: 90px; background: #ff4444; z-index: 1; }
         
-        #digital { font-size: 30px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; }
-        #dateDisplay { font-size: 15px; margin-bottom: 10px; color: #fff; opacity: 0.9; }
+        #digital { font-size: 28px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; }
+        #dateDisplay { font-size: 14px; margin-bottom: 10px; color: #fff; opacity: 0.8; }
         
-        .section { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; width: 95%; max-width: 320px; margin: 4px 0; text-align: center; border: 1px solid var(--text); }
+        .section { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; width: 90%; max-width: 320px; margin: 4px 0; text-align: center; border: 1px solid var(--text); touch-action: manipulation; }
         
-        input[type="time"] { padding: 8px; border-radius: 8px; border: none; font-size: 18px; width: 100%; margin-bottom: 8px; user-select: auto !important; }
+        input[type="time"] { padding: 8px; border-radius: 8px; border: none; font-size: 18px; width: 100%; margin-bottom: 8px; touch-action: manipulation; }
         
         .btn-group { display: flex; gap: 8px; width: 100%; justify-content: center; }
-        .btn { border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.3s; }
+        .btn { border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; touch-action: manipulation; }
         
-        .controls { display: flex; gap: 10px; margin-top: 10px; }
+        .controls { display: flex; gap: 8px; margin-top: 10px; touch-action: manipulation; }
         .alarm-glow { animation: glow 0.5s infinite alternate; background: rgba(255,0,0,0.5) !important; }
         @keyframes glow { from { box-shadow: 0 0 10px red; } to { box-shadow: 0 0 25px red; } }
     </style>
@@ -90,18 +90,18 @@
     </div>
 
     <div id="digital">00:00:00</div>
-    <div id="dateDisplay">Loading...</div>
+    <div id="dateDisplay">Loading Date...</div>
 
     <div class="section" id="alarmBox">
         <strong>⏰ Alarm Setting</strong> 
         <div style="margin-top:8px;">
             <input type="time" id="alarmTime">
             <div class="btn-group">
-                <button class="btn" style="background: var(--gold); color: #000;" onclick="setAlarm()">SET</button>
+                <button class="btn" style="background: var(--gold);" onclick="setAlarm()">SET</button>
                 <button class="btn" style="background: #ff4444; color: white;" onclick="stopAlarm()">OFF</button>
             </div>
         </div>
-        <p id="alarmStatus" style="font-size: 10px; margin-top: 5px;">Tap to start Sound 🔊</p>
+        <p id="alarmStatus" style="font-size: 10px; margin-top: 5px;">Tap screen to start Tik-Tik</p>
     </div>
 
     <div class="section">
@@ -113,22 +113,134 @@
     </div>
 
     <div class="controls">
-        <button class="btn" style="background:#fff; color:#333;" onclick="setTheme('#ffffff', '#d01c8b')">Pink Style</button>
-        <button class="btn" style="background:#000040; color:#FFD700; border:1px solid #FFD700;" onclick="setTheme('#000040', '#FFD700')">Navy Style</button>
+        <button class="btn" style="background:#fff; color:#333;" onclick="setTheme('#ffffff', '#333')">White</button>
+        <button class="btn" style="background:#000040; color:#FFD700; border:1px solid #FFD700;" onclick="setTheme('#000040', '#FFD700')">Navy</button>
         <button class="btn" style="background:#444; color:#fff;" onclick="toggleNight()">🌙 Night</button>
     </div>
 
     <script>
-        // ... (Baaki bacha hua JavaScript code same rahega) ...
-        // Lekin setTheme function ko update kar raha hoon Pink ke liye
+        const dial = document.getElementById('dial');
+        const romanNumerals = ["XII", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
+        let audioCtx, alarmTime = null, isNight = false;
+        let swInterval, swSeconds = 0, swRunning = false, isAlarmPlaying = false;
+
+        // Draw Roman Numerals
+        for (let i = 0; i < 12; i++) {
+            let container = document.createElement('div');
+            container.className = 'roman-number';
+            container.style.transform = `rotate(${i * 30}deg)`;
+            let text = document.createElement('div');
+            text.innerText = romanNumerals[i];
+            text.style.transform = `rotate(-${i * 30}deg)`;
+            container.appendChild(text);
+            dial.appendChild(container);
+        }
+
+        function handleInteraction() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('alarmStatus').innerText = "Sound Active 🔊";
+        }
+
+        function playTick() {
+            if (!audioCtx || audioCtx.state !== 'running') return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            gain.gain.setValueAtTime(0.005, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.03);
+        }
+
+        function playAlarmSound() {
+            if (!audioCtx || audioCtx.state !== 'running') return;
+            const freqs = [440, 554.37, 659.25];
+            freqs.forEach((f, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 1.2);
+            });
+        }
+
+        function update() {
+            const now = new Date();
+            const istDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const h = istDate.getHours(), m = istDate.getMinutes(), s = istDate.getSeconds();
+            const currentTimeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+            
+            document.getElementById('digital').innerText = istDate.toLocaleTimeString('en-IN');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').innerText = istDate.toLocaleDateString('en-IN', options);
+
+            playTick();
+
+            document.getElementById('sec-hand').style.transform = `translateX(-50%) rotate(${s * 6}deg)`;
+            document.getElementById('min-hand').style.transform = `translateX(-50%) rotate(${m * 6 + s * 0.1}deg)`;
+            document.getElementById('hour-hand').style.transform = `translateX(-50%) rotate(${(h % 12) * 30 + m * 0.5}deg)`;
+
+            if (isAlarmPlaying && alarmTime === currentTimeStr && s < 20) {
+                playAlarmSound();
+                document.getElementById('alarmBox').classList.add('alarm-glow');
+            } else if (s >= 20 || alarmTime !== currentTimeStr) {
+                document.getElementById('alarmBox').classList.remove('alarm-glow');
+            }
+        }
+
+        function setAlarm() { 
+            handleInteraction();
+            const val = document.getElementById('alarmTime').value;
+            if(val) {
+                alarmTime = val; isAlarmPlaying = true;
+                document.getElementById('alarmStatus').innerText = "SET FOR: " + alarmTime;
+                document.getElementById('alarmStatus').style.color = "lime";
+            }
+        }
+
+        function stopAlarm() {
+            isAlarmPlaying = false; alarmTime = null;
+            document.getElementById('alarmStatus').innerText = "ALARM OFF";
+            document.getElementById('alarmStatus').style.color = "inherit";
+        }
+
         function setTheme(bg, text) { 
             document.documentElement.style.setProperty('--bg', bg); 
             document.documentElement.style.setProperty('--text', text);
-            // Agar white/pink hai toh date display ka color thoda dark kar dein
-            document.getElementById('dateDisplay').style.color = (bg === '#ffffff') ? '#333' : '#fff';
         }
-        
-        // (Wahi pichla Roman numeral logic, Tick-Tick, Alarm, IST update, Stopwatch wala JS copy kar lein yahan)
+
+        function toggleNight() { 
+            isNight = !isNight; 
+            document.documentElement.style.setProperty('--dim', isNight ? '0.3' : '1'); 
+        }
+
+        function startStopwatch() {
+            if (swRunning) { clearInterval(swInterval); swRunning = false; }
+            else {
+                swRunning = true;
+                swInterval = setInterval(() => {
+                    swSeconds++;
+                    let hrs = Math.floor(swSeconds / 3600).toString().padStart(2,'0');
+                    let mins = Math.floor((swSeconds % 3600) / 60).toString().padStart(2,'0');
+                    let secs = (swSeconds % 60).toString().padStart(2,'0');
+                    document.getElementById('stopwatch').innerText = `${hrs}:${mins}:${secs}`;
+                }, 1000);
+            }
+        }
+
+        function resetStopwatch() { 
+            clearInterval(swInterval); swSeconds = 0; swRunning = false; 
+            document.getElementById('stopwatch').innerText = "00:00:00"; 
+        }
+
+        setInterval(update, 1000);
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
 </html>
