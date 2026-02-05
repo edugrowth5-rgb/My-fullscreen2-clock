@@ -1,4 +1,4 @@
-const cacheName = 'sagar-v16';
+const cacheName = 'sagar-v17';
 const assets = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
