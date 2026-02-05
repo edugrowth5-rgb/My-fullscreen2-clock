@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sagar Royal Clock</title>
+    
+    <meta name="theme-color" content="#000040">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        :root { --bg: #000040; --gold: #FFD700; --text: #FFD700; --dim: 1; }
+        
+        body {
+            background-color: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; font-family: 'Times New Roman', serif;
+            transition: all 0.5s ease; 
+            opacity: var(--dim); cursor: pointer;
+            padding: 10px; box-sizing: border-box; overflow-x: hidden;
+        }
+
+        /* Clock Circle with Premium Shadow */
+        .clock-circle {
+            width: 260px; height: 260px; border: 8px solid var(--text);
+            border-radius: 50%; position: relative;
+            background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .brand-top { position: absolute; width: 100%; text-align: center; top: 50px; font-weight: bold; font-size: 18px; letter-spacing: 2px; }
+        .brand-bottom { position: absolute; width: 100%; text-align: center; bottom: 60px; font-weight: bold; font-size: 12px; letter-spacing: 4px; font-family: Arial, sans-serif; }
+        
+        .roman-number { position: absolute; width: 100%; height: 100%; text-align: center; font-size: 20px; font-weight: bold; padding: 10px; box-sizing: border-box; }
+        
+        /* Hands with Mechanical Animation */
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center; transform: translateX(-50%); border-radius: 5px; transition: transform 0.1s cubic-bezier(0.4, 2.5, 0.4, 0.8); }
+        .hour { width: 6px; height: 50px; background: var(--text); z-index: 3; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .min { width: 4px; height: 80px; background: #fff; border: 1px solid #333; z-index: 2; }
+        .sec { width: 2px; height: 95px; background: #ff4444; z-index: 1; }
+        
+        #digital { font-size: 32px; margin-top: 5px; font-weight: bold; letter-spacing: 2px; }
+        
+        /* New Date Style */
+        #dateDisplay { font-size: 16px; margin-bottom: 10px; font-weight: normal; font-family: Arial, sans-serif; opacity: 0.9; color: #fff; }
+        
+        .section { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; width: 100%; max-width: 320px; margin: 5px 0; text-align: center; border: 1px solid var(--text); }
+        
+        .alarm-controls { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 5px; }
+        input[type="time"] { padding: 10px; border-radius: 8px; border: none; font-size: 18px; width: 85%; background: #fff; color: #000; }
+        
+        .btn-group { display: flex; gap: 10px; width: 100%; justify-content: center; }
+        .btn { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; background: #e0e0e0; color: #333; font-size: 13px; }
+        .btn:active { transform: scale(0.95); }
+        
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+        
+        .alarm-glow { animation: glow 0.5s infinite alternate; background: rgba(255,0,0,0.5) !important; }
+        @keyframes glow { from { box-shadow: 0 0 10px red; } to { box-shadow: 0 0 30px red; } }
+    </style>
+</head>
+<body onclick="handleInteraction()">
+
+    <div class="clock-circle" id="dial">
+        <div class="brand-top">👑<br>SAGAR</div>
+        <div class="brand-bottom">QUARTZ</div>
+        <div id="hour-hand" class="hand hour"></div>
+        <div id="min-hand" class="hand min"></div>
+        <div id="sec-hand" class="hand sec"></div>
+    </div>
+
+    <div id="digital">00:00:00</div>
+    <div id="dateDisplay">Loading Date...</div>
+
+    <div class="section" id="alarmBox">
+        <strong>⏰ Alarm Setting</strong> 
+        <div class="alarm-controls">
+            <input type="time" id="alarmTime">
+            <div class="btn-group">
+                <button class="btn" style="background: var(--gold);" onclick="setAlarm()">SET</button>
+                <button class="btn" style="background: #ff4444; color: white;" onclick="stopAlarm()">OFF</button>
+            </div>
+        </div>
+        <p id="alarmStatus" style="font-size: 11px; margin-top: 5px;">ALARM OFF</p>
+    </div>
+
+    <div class="section">
+        <strong>⏱ Stopwatch:</strong> <span id="stopwatch">00:00:00</span>
+        <div class="btn-group" style="margin-top:5px;">
+            <button class="btn" onclick="startStopwatch()">START/STOP</button>
+            <button class="btn" onclick="resetStopwatch()">RESET</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" style="background:#fff;" onclick="setTheme('#ffffff', '#333')">White</button>
+        <button class="btn" style="background:#FFC0CB;" onclick="setTheme('#FFC0CB', '#d01c8b')">Pink</button>
+        <button class="btn" style="background:#000040; color:#fff;" onclick="setTheme('#000040', '#FFD700')">Navy</button>
+        <button class="btn" style="background:#444; color:#fff;" onclick="toggleNight()">🌙 Night</button>
+    </div>
+
+    <script>
+        const dial = document.getElementById('dial');
+        const romanNumerals = ["XII", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
+        let audioCtx, alarmTime = null, isNight = false;
+        let swInterval, swSeconds = 0, swRunning = false;
+        let isAlarmPlaying = false;
+
+        // Roman Numerals Setup
+        for (let i = 0; i < 12; i++) {
+            let container = document.createElement('div');
+            container.className = 'roman-number';
+            container.style.transform = `rotate(${i * 30}deg)`;
+            let text = document.createElement('div');
+            text.innerText = romanNumerals[i];
+            text.style.transform = `rotate(-${i * 30}deg)`;
+            container.appendChild(text);
+            dial.appendChild(container);
+        }
+
+        function handleInteraction() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(freq, vol, duration) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function update() {
+            const now = new Date();
+            const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            
+            // Digital Time & Date
+            const currentTimeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+            document.getElementById('digital').innerText = now.toLocaleTimeString();
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateDisplay').innerText = now.toLocaleDateString('en-IN', options);
+
+            // Hand Movements with Mechanical cubic-bezier effect
+            document.getElementById('sec-hand').style.transform = `translateX(-50%) rotate(${s * 6}deg)`;
+            document.getElementById('min-hand').style.transform = `translateX(-50%) rotate(${m * 6 + s * 0.1}deg)`;
+            document.getElementById('hour-hand').style.transform = `translateX(-50%) rotate(${(h % 12) * 30 + m * 0.5}deg)`;
+
+            // Alarm Logic
+            if (isAlarmPlaying && alarmTime === currentTimeStr && s < 30) {
+                playSound(880, 0.2, 0.5);
+                document.getElementById('alarmBox').classList.add('alarm-glow');
+                if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+            } else if (s >= 30 || alarmTime !== currentTimeStr) {
+                document.getElementById('alarmBox').classList.remove('alarm-glow');
+            }
+        }
+
+        function setAlarm() { 
+            handleInteraction();
+            const inputVal = document.getElementById('alarmTime').value;
+            if(inputVal) {
+                alarmTime = inputVal; 
+                isAlarmPlaying = true;
+                document.getElementById('alarmStatus').innerText = "SET FOR: " + alarmTime;
+                document.getElementById('alarmStatus').style.color = "lime";
+            }
+        }
+
+        function stopAlarm() {
+            isAlarmPlaying = false;
+            alarmTime = null;
+            document.getElementById('alarmStatus').innerText = "ALARM OFF";
+            document.getElementById('alarmStatus').style.color = "inherit";
+            document.getElementById('alarmBox').classList.remove('alarm-glow');
+        }
+        
+        function setTheme(bg, text) { 
+            document.documentElement.style.setProperty('--bg', bg); 
+            document.documentElement.style.setProperty('--text', text);
+            document.querySelector('meta[name="theme-color"]').setAttribute("content", bg);
+        }
+        
+        function toggleNight() { 
+            isNight = !isNight; 
+            document.documentElement.style.setProperty('--dim', isNight ? '0.3' : '1'); 
+        }
+        
+        function startStopwatch() {
+            if (swRunning) { clearInterval(swInterval); swRunning = false; }
+            else {
+                swRunning = true;
+                swInterval = setInterval(() => {
+                    swSeconds++;
+                    let hrs = Math.floor(swSeconds / 3600).toString().padStart(2,'0');
+                    let mins = Math.floor((swSeconds % 3600) / 60).toString().padStart(2,'0');
+                    let secs = (swSeconds % 60).toString().padStart(2,'0');
+                    document.getElementById('stopwatch').innerText = `${hrs}:${mins}:${secs}`;
+                }, 1000);
+            }
+        }
+        function resetStopwatch() { 
+            clearInterval(swInterval); swSeconds = 0; swRunning = false; 
+            document.getElementById('stopwatch').innerText = "00:00:00"; 
+        }
+
+        setInterval(update, 1000);
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    </script>
+</body>
+</html>
